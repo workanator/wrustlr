@@ -1,0 +1,19 @@
+[package]
+description = "Wrust Core"
+name = "wrust_core"
+version = "0.1.0"
+authors = ["workanator <workanator@gmail.com>"]
+
+[lib]
+name = "wrust_core"
+crate-type = ["rlib"]
+test = true
+plugin = false
+
+[dependencies]
+wrust_types = { path = "../types", version = "*" }
+wrust_io = { path = "../io", version = "*" }
+bytes = "*"
+mio = "0.4"
+log = "*"
+deque = "*"

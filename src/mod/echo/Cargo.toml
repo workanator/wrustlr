@@ -1,0 +1,15 @@
+[package]
+description = "Wrustlr Echo Module"
+name = "wrust_mod_echo"
+version = "0.1.0"
+authors = ["workanator <workanator@gmail.com>"]
+
+[lib]
+name = "wrust_mod_echo"
+crate-type = ["rlib"]
+test = true
+plugin = false
+
+[dependencies]
+wrust_types = { path = "../../lib/types", version = "*" }
+wrust_io = { path = "../../lib/io", version = "*" }

@@ -1,0 +1,17 @@
+[package]
+description = "Wrust Types"
+name = "wrust_types"
+version = "0.1.0"
+authors = ["workanator <workanator@gmail.com>"]
+
+[lib]
+name = "wrust_types"
+crate-type = ["rlib"]
+test = true
+plugin = false
+
+[dependencies]
+bytes = "*"
+mio = "0.4"
+config = "*"
+libc = "*"
