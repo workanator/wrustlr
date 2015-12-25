@@ -6,6 +6,7 @@ use mio::tcp::TcpListener;
 use mio::unix::UnixListener;
 use wrust_types::{Error, Result};
 use wrust_types::net::Protocol;
+use wrust_types::module::Category;
 use ::module::Factory;
 use super::{Server, ServerConf};
 
@@ -44,7 +45,7 @@ impl Registry {
 			_ => return Err(Error::general("Server socket binding failed").because("Unsupported protocol"))
 		};
 
-		let forward = try!(module_factory.produce_stream(&config.forward.name, &config.forward.xpath));
+		let forward = try!(module_factory.produce(Category::Stream, &config.forward.name, &config.forward.xpath));
 		let token = mio::Token(self.start_from + self.items.len());
 
 		self.items.push(Arc::new(Server::new(token, config.clone(), socket, forward)));
