@@ -1,0 +1,13 @@
+[package]
+description = "Wrust Asynchronous Utils"
+name = "wrust_async"
+version = "0.1.0"
+authors = ["workanator <workanator@gmail.com>"]
+
+[lib]
+name = "wrust_async"
+crate-type = ["rlib"]
+test = true
+plugin = false
+
+[dependencies]

@@ -2,9 +2,15 @@
 # BUILD TARGETS
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-all: lib mod bin
+all: lib \
+	 mod \
+	 bin
 
-lib: lib-types lib-io lib-core
+lib: lib-types \
+	 lib-conf \
+	 lib-io \
+	 lib-async \
+	 lib-core
 
 mod: mod-echo
 
@@ -15,24 +21,41 @@ run: bin-server
 	@cp src/bin/server/target/debug/wrust-server bin/;
 	bin/wrust-server;
 
-update: update-lib-types \
-		update-lib-io \
-		update-lib-core \
-		update-mod-echo \
-		update-bin-server
-
 clean:
 	@rm -fr `find . -type d -name target`;
 	@rm -fr bin;
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# UPDATE TARGETS
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+update: update-lib \
+		update-mod \
+		update-bin
+
+update-lib: update-lib-types \
+			update-lib-conf \
+			update-lib-io \
+			update-lib-async \
+			update-lib-core
+
+update-mod: update-mod-echo
+
+update-bin: update-bin-server
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # TEST TARGETS
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-test-all: test-lib test-mod
+test: test-lib \
+	  test-mod
 
-test-lib: test-lib-types test-lib-io test-lib-core
+test-lib: test-lib-types \
+		  test-lib-conf \
+		  test-lib-io \
+		  test-lib-async \
+		  test-lib-core
 
 test-mod: test-mod-echo
 
@@ -52,6 +75,20 @@ test-lib-types:
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# LIB CONF
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+lib-conf:
+	cargo build --manifest-path="src/lib/conf/Cargo.toml";
+
+update-lib-conf:
+	cargo update --manifest-path="src/lib/conf/Cargo.toml";
+
+test-lib-conf:
+	cargo test --manifest-path="src/lib/conf/Cargo.toml";
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # LIB IO
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -63,6 +100,20 @@ update-lib-io:
 
 test-lib-io:
 	cargo test --manifest-path="src/lib/io/Cargo.toml";
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# LIB ASYNC
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+lib-async:
+	cargo build --manifest-path="src/lib/async/Cargo.toml";
+
+update-lib-async:
+	cargo update --manifest-path="src/lib/async/Cargo.toml";
+
+test-lib-async:
+	cargo test --manifest-path="src/lib/async/Cargo.toml";
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

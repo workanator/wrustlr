@@ -10,7 +10,6 @@ extern crate libc;
 pub mod channel;
 pub mod net;
 pub mod module;
-pub mod concurrent;
 pub mod conf;
 
 pub use self::error::Error;

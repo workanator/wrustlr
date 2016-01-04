@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, Condvar};
-use super::Target;
+use super::Notify;
 
 /// `ReadyFlag` is usefull to signal that some data is ready or process is done.  
 /// The flag is implemented using `AtomicBool` guarded by `Mutex` and `Condvar` wrapped
@@ -10,7 +10,7 @@ use super::Target;
 ///
 /// ```
 /// use std::thread;
-/// use wrust_types::concurrent::{ReadyFlag, Target};
+/// use wrust_async::concurrent::{ReadyFlag, Notify};
 ///
 /// let go = ReadyFlag::new();
 ///
@@ -23,7 +23,7 @@ use super::Target;
 /// }
 ///
 /// thread::sleep_ms(500);
-/// go.raise(Target::All); // Raise the flag and notify all waiting threads
+/// go.raise(Notify::All); // Raise the flag and notify all waiting threads
 /// ```
 
 #[derive(Clone)]
@@ -55,16 +55,11 @@ impl ReadyFlag {
 	}
 
 	/// Raise the flag (set to `true`) and notify thread(s) waiting for it.
-	pub fn raise(&self, target: Target) {
+	pub fn raise(&self, target: Notify) {
 		let &(ref lock, ref cvar) = &*self.flag;
 		let value = lock.lock().unwrap();
 		value.store(true, Ordering::Release);
-
-		match target {
-			Target::One => cvar.notify_one(),
-			Target::All => cvar.notify_all(),
-			Target::None => (),
-		};
+		target.notify(cvar);
 	}
 
 	/// Wait for the flag to be risen or return if the flag is already risen. When the waiting
@@ -89,13 +84,13 @@ mod tests {
 		let rf = ReadyFlag::new();
 		assert_eq!(rf.is_up(), false);
 
-		rf.raise(Target::None);
+		rf.raise(Notify::None);
 		assert_eq!(rf.is_up(), true);
 
 		rf.lower();
 		assert_eq!(rf.is_up(), false);
 
-		rf.raise(Target::None);
+		rf.raise(Notify::None);
 		rf.wait();
 		assert_eq!(rf.is_up(), false);
 	}
@@ -111,12 +106,12 @@ mod tests {
 
 			thread::spawn(move || {
 				rf.wait();
-				rf_done.raise(Target::All);
+				rf_done.raise(Notify::All);
 			});
 		}
 
 		thread::sleep_ms(500);
-		rf.raise(Target::All);
+		rf.raise(Notify::All);
 
 		rf_done.wait();
 	}
