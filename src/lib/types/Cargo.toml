@@ -11,7 +11,4 @@ test = true
 plugin = false
 
 [dependencies]
-bytes = "*"
 mio = "0.4"
-config = "*"
-libc = "*"

@@ -249,7 +249,7 @@ impl FromStr for Protocol {
 			PROTOCOL_TCP => Ok(Protocol::Tcp(())),
 			PROTOCOL_UDP => Ok(Protocol::Udp(())),
 			PROTOCOL_UNIX => Ok(Protocol::Unix(())),
-			_ => make_err!(format!("Invalid protocol name {}", value))
+			_ => Error::new(format!("Invalid protocol name {}", value)).result()
 		}
 	}
 }
