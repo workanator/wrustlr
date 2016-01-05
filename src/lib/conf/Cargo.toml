@@ -1,0 +1,15 @@
+[package]
+description = "Wrust Configuration"
+name = "wrust_conf"
+version = "0.1.0"
+authors = ["workanator <workanator@gmail.com>"]
+
+[lib]
+name = "wrust_conf"
+crate-type = ["rlib"]
+test = true
+plugin = false
+
+[dependencies]
+config = "*"
+wrust_types = { path = "../types", version = "*" }
