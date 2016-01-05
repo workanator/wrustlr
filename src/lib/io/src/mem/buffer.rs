@@ -171,7 +171,7 @@ impl Buffer {
 
 				Ok(count)
 			},
-			_ => Error::general("Cannot push data into buffer").because(format!("Mode is {:?}", self.mode)).result()
+			_ => Error::new(format!("Buffer is in mode {:?} while {:?} is expected", self.mode, Mode::Push)).result()
 		}
 	}
 
@@ -209,7 +209,7 @@ impl Buffer {
 
 				Ok(count)
 			},
-			_ => Error::general("Cannot push data into buffer").because(format!("Mode is {:?}", self.mode)).result()
+			_ => Error::new(format!("Buffer is in mode {:?} while {:?} is expected", self.mode, Mode::Push)).result()
 		}
 	}
 
@@ -224,10 +224,10 @@ impl Buffer {
 						self.length = self.length + count;
 						Ok(count)
 					},
-					Err(msg) => make_err!(msg),
+					Err(msg) => Error::new("Cannot read and push data into buffer").because(msg).result(),
 				}
 			},
-			_ => Error::general("Cannot read and push data into buffer").because(format!("Mode is {:?}", self.mode)).result()
+			_ => Error::new(format!("Buffer is in mode {:?} while {:?} is expected", self.mode, Mode::Push)).result()
 		}
 	}
 
@@ -294,7 +294,7 @@ impl Buffer {
 
 				Ok(count)
 			},
-			_ => Error::general("Cannot pull data from buffer").because(format!("Mode is {:?}", self.mode)).result()
+			_ => Error::new(format!("Buffer is in mode {:?} while {:?} is expected", self.mode, Mode::Pull)).result()
 		}
 	}
 
@@ -331,7 +331,7 @@ impl Buffer {
 
 				Ok(count)
 			},
-			_ => Error::general("Cannot pull data range from buffer").because(format!("Mode is {:?}", self.mode)).result()
+			_ => Error::new(format!("Buffer is in mode {:?} while {:?} is expected", self.mode, Mode::Pull)).result()
 		}
 	}
 
@@ -347,14 +347,14 @@ impl Buffer {
 							self.position = self.position + count;
 							Ok(count)
 						},
-						Err(msg) => make_err!(msg),
+						Err(msg) => Error::new("Cannot pull and write data from buffer").because(msg).result(),
 					}
 				}
 				else {
 					Ok(0)
 				}
 			},
-			_ => Error::general("Cannot pull and write data from buffer").because(format!("Mode is {:?}", self.mode)).result()
+			_ => Error::new(format!("Buffer is in mode {:?} while {:?} is expected", self.mode, Mode::Pull)).result()
 		}
 	}
 }
