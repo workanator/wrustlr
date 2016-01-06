@@ -1,0 +1,17 @@
+[package]
+description = "Wrust Module Interface"
+name = "wrust_module"
+version = "0.1.0"
+authors = ["workanator <workanator@gmail.com>"]
+
+[lib]
+name = "wrust_module"
+crate-type = ["rlib"]
+test = true
+plugin = false
+
+[dependencies]
+mio = "0.4"
+wrust_types = { path = "../types", version = "*" }
+wrust_io = { path = "../io", version = "*" }
+wrust_conf = { path = "../conf", version = "*" }

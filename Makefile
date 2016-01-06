@@ -10,6 +10,7 @@ lib: lib-types \
 	 lib-conf \
 	 lib-io \
 	 lib-async \
+	 lib-module \
 	 lib-core
 
 mod: mod-echo
@@ -38,6 +39,7 @@ update-lib: update-lib-types \
 			update-lib-conf \
 			update-lib-io \
 			update-lib-async \
+			update-lib-module \
 			update-lib-core
 
 update-mod: update-mod-echo
@@ -55,6 +57,7 @@ test-lib: test-lib-types \
 		  test-lib-conf \
 		  test-lib-io \
 		  test-lib-async \
+		  test-lib-module \
 		  test-lib-core
 
 test-mod: test-mod-echo
@@ -114,6 +117,20 @@ update-lib-async:
 
 test-lib-async:
 	cargo test --manifest-path="src/lib/async/Cargo.toml";
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# LIB MODULE
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+lib-module:
+	cargo build --manifest-path="src/lib/module/Cargo.toml";
+
+update-lib-module:
+	cargo update --manifest-path="src/lib/module/Cargo.toml";
+
+test-lib-module:
+	cargo test --manifest-path="src/lib/module/Cargo.toml";
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
