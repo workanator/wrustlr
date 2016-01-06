@@ -2,10 +2,10 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use wrust_types::Error;
-use wrust_types::conf::Conf;
-use wrust_types::module::{Facility, Category};
-use wrust_types::module::stream::{Behavior, Intention};
 use wrust_types::net::connection::Descriptor;
+use wrust_conf::Conf;
+use wrust_module::{Facility, Category};
+use wrust_module::stream::{Behavior, Intention};
 
 const MOD_NAME: &'static str = "echo";
 
@@ -18,7 +18,7 @@ pub struct Module {
 impl Facility for Module {
 	fn new(config: &Conf, xpath: &String) -> Self {
 		// Read configuration
-		let reverse = config.get().lookup_boolean_or(&format!("{}.reverse", xpath), false);
+		let reverse = config.lookup_boolean_or(&format!("{}.reverse", xpath), false);
 
 		Module {
 			client: Mutex::new(RefCell::new(HashMap::new())),
@@ -61,7 +61,7 @@ impl Behavior for Module {
 
 				Intention::Write
 			},
-			None => Intention::Close(Some(Error::general("Read internal error").because("Client buffer is undefined")))
+			None => Intention::Close(Some(Error::new("Client buffer is undefined")))
 		}
 	}
 
@@ -88,7 +88,7 @@ impl Behavior for Module {
 
 				Intention::Read
 			},
-			None => Intention::Close(Some(Error::general("Write internal error").because("Client buffer is undefined")))
+			None => Intention::Close(Some(Error::new("Client buffer is undefined")))
 		}
 	}
 
