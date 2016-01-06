@@ -1,0 +1,16 @@
+[package]
+description = "Wrust Web Server"
+name = "wrust-server"
+version = "0.1.0"
+authors = ["workanator <workanator@gmail.com>"]
+
+[dependencies]
+wrust_types = { path = "../../lib/types", version = "*" }
+wrust_conf = { path = "../../lib/conf", version = "*" }
+wrust_module = { path = "../../lib/module", version = "*" }
+wrust_core = { path = "../../lib/core", version = "*" }
+wrust_mod_echo = { path = "../../mod/echo", version = "*" }
+log = "*"
+env_logger = "*"
+chan-signal = "*"
+ansi_term = "*"
