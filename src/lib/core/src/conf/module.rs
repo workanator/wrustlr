@@ -1,7 +1,7 @@
 //! Module configuration
 
 use wrust_types::{Error, Result};
-use wrust_types::conf::{Conf, FromConfig};
+use wrust_conf::{Conf, FromConf};
 
 
 /// Module configuration
@@ -14,19 +14,19 @@ pub struct ModuleConf {
 }
 
 
-impl FromConfig for ModuleConf {
+impl FromConf for ModuleConf {
 	// Load settings from the config
-	fn from_config(config: &Conf, xpath: &str) -> Result<Self> {
+	fn from_conf(config: &Conf, xpath: &str) -> Result<Self> {
 		// Determine where xpath is reference to
 		let xpath = match config.resolve_reference(xpath) {
 			Some(path) => path,
-			None => return Err(Error::general("Cannot load module configuration").because(format!("Reference or group is not found at '{}'", xpath))),
+			None => return Error::new(format!("Reference or group is not found at '{}'", xpath)).result(),
 		};
 
 		// Read module name
-		let module = match config.get().lookup_str(&format!("{}.module", xpath)) {
+		let module = match config.lookup_str(&format!("{}.module", xpath)) {
 			Some(name) => name.to_string(),
-			None => return Err(Error::general("Cannot load module configuration").because(format!("Module name is required at '{}'", xpath))),
+			None => return Error::new(format!("Module name is required at '{}'", xpath)).result(),
 		};
 
 		Ok(ModuleConf {

@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 use deque;
 use mio;
-use wrust_types::concurrent::{Target, ReadyFlag};
+use wrust_async::concurrent::{Notify, ReadyFlag};
 use ::net::EventChannel;
 use ::net::server::Server;
 use ::net::client::Client;
@@ -74,7 +74,7 @@ impl Queue {
 	/// Awake one thread eventually
 	pub fn awake<F>(&self, factory: F)
 		where F: Fn() -> (EventChannel) {
-		self.ready.raise(Target::One);
+		self.ready.raise(Notify::One);
 
 		let count_diff = self.worker_count_max - self.worker_count.load(Ordering::SeqCst);
 		for _ in 0..count_diff {
@@ -102,7 +102,7 @@ impl Queue {
 		}
 		// .. wait until all workers done
 		while self.worker_count.load(Ordering::SeqCst) > 0 {
-			self.ready.raise(Target::All);
+			self.ready.raise(Notify::All);
 			thread::sleep_ms(100);
 		}
 	}
@@ -111,7 +111,7 @@ impl Queue {
 	pub fn push(&self, parcel: Parcel) {
 		// Push the parcel in the deque and raise the ready flag
 		self.worker.push(parcel);
-		self.ready.raise(Target::All);
+		self.ready.raise(Notify::All);
 	}
 
 	/// Create a new `Worker` which handles client socket I/O operations.

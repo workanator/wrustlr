@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use wrust_types::{Error, Result};
-use wrust_types::conf::Conf;
-use wrust_types::module::Category;
-use wrust_types::module::stream;
+use wrust_conf::Conf;
+use wrust_module::Category;
+use wrust_module::stream;
 
 pub struct Factory {
 	config: Conf,
@@ -30,7 +30,7 @@ impl Factory {
 		match category {
 			Category::Stream => match self.streams.get(name) {
 				Some(new) => Ok(new(&self.config, xpath_base)),
-				None => Err(Error::general("Cannot instantiate module").because(format!("Module {:?}:{} is not registered", category, name))),
+				None => Error::new(format!("Module {:?}:{} is not registered", category, name)).result(),
 			},
 		}
 	}

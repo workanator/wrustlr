@@ -3,8 +3,8 @@ use mio;
 use mio::tcp::TcpListener;
 use mio::unix::UnixListener;
 use wrust_types::net::Protocol;
-use wrust_types::module::stream::{Behavior, Intention};
 use wrust_types::net::connection::Descriptor;
+use wrust_module::stream::{Behavior, Intention};
 use super::ServerConf;
 
 pub type ServerProtocol = Protocol<TcpListener, (), UnixListener>;

@@ -57,7 +57,7 @@ impl Core {
 		// Create and initialize event loop
 		let event_loop = mio::EventLoop::new();
 		if event_loop.is_err() {
-			return Err(Error::general("Event loop failed to initialize"))
+			return Error::new("Event loop failed to initialize").result()
 		}
 
 		let mut event_loop = event_loop.unwrap();
@@ -74,7 +74,7 @@ impl Core {
 
 							None
 						},
-						Err(msg) => Some(Error::general("TCP listener registration failed").because(msg))
+						Err(msg) => Some(Error::new("TCP listener registration failed").because(msg))
 					}
 				},
 				Protocol::Unix(ref listener) => {
@@ -86,10 +86,10 @@ impl Core {
 
 							None
 						},
-						Err(msg) => Some(Error::general("UNIX listener registration failed").because(msg))
+						Err(msg) => Some(Error::new("UNIX listener registration failed because {}").because(msg))
 					}
 				},
-				Protocol::Udp(_) => Some(Error::general("UDP is not supported"))
+				Protocol::Udp(_) => Some(Error::new("UDP is not supported"))
 			}
 		});
 
@@ -151,7 +151,7 @@ impl mio::Handler for Core {
 									Err(msg) => Err(msg)
 								},
 								Ok(None) => Ok(None),
-								_ => Err(Error::general("Cannot accept TCP client connection"))
+								_ => Error::new("Cannot accept TCP client connection").result()
 							}
 						},
 						Protocol::Unix(ref sock) => {
@@ -162,10 +162,10 @@ impl mio::Handler for Core {
 									Err(msg) => Err(msg)
 								},
 								Ok(None) => Ok(None),
-								_ => Err(Error::general("Cannot accept UNIX client connection"))
+								_ => Error::new("Cannot accept UNIX client connection").result()
 							}
 						},
-						Protocol::Udp(_) => Err(Error::general("UDP is not supported"))
+						Protocol::Udp(_) => Error::new("UDP is not supported").result()
 					}});
 
 				match client_token {
@@ -311,7 +311,7 @@ fn accept<Sock> (sock: &Sock, event_loop: &mut mio::EventLoop<Core>) -> Result<O
 			error!("Server socket accept failed with error: {}", e);
 			event_loop.shutdown();
 
-			Err(Error::general(e))
+			Error::new("Failed to accept client connection").because(e).result()
 		}
 	}
 }

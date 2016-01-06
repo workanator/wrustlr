@@ -29,7 +29,7 @@ impl Registry {
 
 		match token {
 			Some(token) => Ok(token),
-			None => Err(Error::general("Cannot add the Client to the Registry"))
+			None => Error::new("Cannot add the Client to the Registry").result()
 		}
 	}
 

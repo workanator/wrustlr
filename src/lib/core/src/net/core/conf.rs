@@ -1,7 +1,7 @@
 //! Core configuration
 
 use wrust_types::{Error, Result};
-use wrust_types::conf::{Conf, FromConfig};
+use wrust_conf::{Conf, FromConf};
 use ::conf::LogConf;
 
 
@@ -14,22 +14,22 @@ pub struct CoreConf {
 }
 
 
-impl FromConfig for CoreConf {
+impl FromConf for CoreConf {
 	// Load settings from the config
-	fn from_config(config: &Conf, xpath: &str) -> Result<Self> {
+	fn from_conf(config: &Conf, xpath: &str) -> Result<Self> {
 		// Check if core section exists
-		if None == config.get().lookup(xpath) {
-			return Err(Error::general("Cannot load core configuration").because(format!("Group does not exist at path '{}'", xpath)));
+		if None == config.lookup(xpath) {
+			return Error::new(format!("Group does not exist at path '{}'", xpath)).result();
 		}
 
 		// Read work queue settings
-		let worker_count = match config.get().lookup_integer32(&format!("{}.worker_count", xpath)) {
+		let worker_count = match config.lookup_integer32(&format!("{}.worker_count", xpath)) {
 			Some(count) => count as u16,
-			None => return Err(Error::general("Cannot load core configuration").because(format!("Worker Count is required at '{}'", xpath))),
+			None => return Error::new(format!("Worker Count is required at '{}'", xpath)).result(),
 		};
 
 		// Read logging config
-		let log_conf = try!(LogConf::from_config(config, &format!("{}.log", xpath)));
+		let log_conf = try!(LogConf::from_conf(config, &format!("{}.log", xpath)));
 
 		Ok(CoreConf {
 			worker_count: worker_count,

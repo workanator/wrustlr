@@ -8,7 +8,7 @@ use mio::{TryRead, TryWrite, EventSet};
 use wrust_types::{Result, Error};
 use wrust_types::net::Protocol;
 use wrust_types::net::connection::State;
-use wrust_types::module::stream::{Behavior, Intention};
+use wrust_module::stream::{Behavior, Intention};
 use ::net::{EventChannel, Request};
 use ::net::client::Client;
 use ::net::server::Server;
@@ -277,13 +277,13 @@ impl Worker {
 			match sock {
 				&mut Protocol::Tcp(ref mut stream) => match stream.try_read_buf(buf) {
 					Ok(count) => Ok(count),
-					Err(msg) => make_err!(msg)
+					Err(msg) => Error::new("Cannot read from client socket").because(msg).result()
 				},
 				&mut Protocol::Unix(ref mut stream) => match stream.try_read_buf(buf) {
 					Ok(count) => Ok(count),
-					Err(msg) => make_err!(msg)
+					Err(msg) => Error::new("Cannot read from client socket").because(msg).result()
 				},
-				_ => Err(Error::general("Cannot read from client socket").because("UDP is not supported"))
+				_ => Error::new("Cannot read from client socket because UDP is not supported").result()
 			}
 		})
 	}
@@ -293,13 +293,13 @@ impl Worker {
 			match sock {
 				&mut Protocol::Tcp(ref mut stream) => match stream.try_write(buf) {
 					Ok(count) => Ok(count),
-					Err(msg) => make_err!(msg)
+					Err(msg) => Error::new("Cannot write to client socket").because(msg).result()
 				},
 				&mut Protocol::Unix(ref mut stream) => match stream.try_write(buf) {
 					Ok(count) => Ok(count),
-					Err(msg) => make_err!(msg)
+					Err(msg) => Error::new("Cannot write to client socket").because(msg).result()
 				},
-				_ => Err(Error::general("Cannot write to client socket").because("UDP is not supported"))
+				_ => Error::new("Cannot write to client socket because UDP is not supported").result()
 			}
 		})
 	}

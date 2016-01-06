@@ -13,6 +13,9 @@ plugin = false
 [dependencies]
 wrust_types = { path = "../types", version = "*" }
 wrust_io = { path = "../io", version = "*" }
+wrust_conf = { path = "../conf", version = "*" }
+wrust_module = { path = "../module", version = "*" }
+wrust_async = { path = "../async", version = "*" }
 bytes = "*"
 mio = "0.4"
 log = "*"

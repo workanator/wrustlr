@@ -6,7 +6,7 @@ use mio::tcp::TcpListener;
 use mio::unix::UnixListener;
 use wrust_types::{Error, Result};
 use wrust_types::net::Protocol;
-use wrust_types::module::Category;
+use wrust_module::Category;
 use ::module::Factory;
 use super::{Server, ServerConf};
 
@@ -31,7 +31,7 @@ impl Registry {
 
 				match TcpListener::bind(&addr) {
 					Ok(listener) => Protocol::Tcp(listener),
-					Err(msg) => return Err(Error::general("TCP Server socket binding failed").because(msg))
+					Err(msg) => return Error::new("TCP Server socket binding failed").because(msg).result()
 				}
 			},
 			Protocol::Unix(ref details) => {
@@ -39,10 +39,10 @@ impl Registry {
 
 				match UnixListener::bind(&path) {
 					Ok(listener) => Protocol::Unix(listener),
-					Err(msg) => return Err(Error::general("UNIX Server socket binding failed").because(msg))
+					Err(msg) => return Error::new("UNIX Server socket binding failed").because(msg).result()
 				}
 			},
-			_ => return Err(Error::general("Server socket binding failed").because("Unsupported protocol"))
+			_ => return Error::new("Cannot bind UDP socket because the protocol is unsupported").result()
 		};
 
 		let forward = try!(module_factory.produce(Category::Stream, &config.forward.name, &config.forward.xpath));
@@ -75,7 +75,7 @@ impl Registry {
 			func(&self.items[index], context)
 		}
 		else {
-			Err(Error::general("Server index is out of bounds").because(format!("{} not in [0;{})", index, self.items.len())))
+			Error::new(format!("Server index is out of bounds ({} not in [0;{}))", index, self.items.len())).result()
 		}
 	}
 }

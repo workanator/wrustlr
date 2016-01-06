@@ -2,8 +2,8 @@
 
 use std::net::SocketAddr;
 use wrust_types::{Error, Result};
-use wrust_types::conf::{Conf, FromConfig};
 use wrust_types::net::Protocol;
+use wrust_conf::{Conf, FromConf};
 use ::conf::{ModuleConf, SocketConf};
 
 
@@ -25,36 +25,36 @@ impl ServerConf {
 			let addr = format!("{}:{}", details.address, details.port);
 			match addr.parse() {
 				Ok(sockaddr) => Ok(sockaddr),
-				Err(_) => Err(Error::general("Invalid socket address").because(addr))
+				Err(_) => Error::new(format!("Invalid socket address {}", addr)).result()
 			}
 		}
 		else if let Protocol::Udp(ref details) = self.listen.protocol {
 			let addr = format!("{}:{}", details.address, details.port);
 			match addr.parse() {
 				Ok(sockaddr) => Ok(sockaddr),
-				Err(_) => Err(Error::general("Invalid socket address").because(addr))
+				Err(_) => Error::new(format!("Invalid socket address {}", addr)).result()
 			}
 		}
 		else {
-			Err(Error::general("Non-TCP or non-UDP address"))
+			Error::new("Non-TCP or non-UDP address").result()
 		}
 	}
 }
 
 
-impl FromConfig for ServerConf {
+impl FromConf for ServerConf {
 	// Load settings from the config
-	fn from_config(config: &Conf, xpath: &str) -> Result<Self> {
+	fn from_conf(config: &Conf, xpath: &str) -> Result<Self> {
 		// Determine where xpath is reference to
 		let xpath = match config.resolve_reference(xpath) {
 			Some(path) => path,
-			None => return Err(Error::general("Cannot load server configuration").because(format!("Reference or group is not found at '{}'", xpath))),
+			None => return Error::new(format!("Reference or group is not found at '{}'", xpath)).result(),
 		};
 
 		// Read listening socket configuration
-		let listen_conf = try!(SocketConf::from_config(&config, &format!("{}.listen", xpath)));
+		let listen_conf = try!(SocketConf::from_conf(&config, &format!("{}.listen", xpath)));
 		// Read traffic forward target
-		let forward_conf = try!(ModuleConf::from_config(&config, &format!("{}.forward", xpath)));
+		let forward_conf = try!(ModuleConf::from_conf(&config, &format!("{}.forward", xpath)));
 
 		Ok(ServerConf {
 			listen: listen_conf,
