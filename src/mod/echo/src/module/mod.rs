@@ -5,7 +5,7 @@ use wrust_types::Error;
 use wrust_types::net::connection::Descriptor;
 use wrust_conf::Conf;
 use wrust_module::{Facility, Category};
-use wrust_module::stream::{Behavior, Intention};
+use wrust_module::stream::{Behavior, Intention, Flush};
 
 const MOD_NAME: &'static str = "echo";
 
@@ -50,7 +50,7 @@ impl Behavior for Module {
 		Intention::Read
 	}
 
-	fn read(self: &Self, desc: &Descriptor, buf: &mut Vec<u8>) -> Intention {
+	fn read(self: &Self, desc: &Descriptor, buf: &Vec<u8>) -> Intention {
 		let cell = self.client.lock().unwrap();
 		let mut cell_buf = cell.borrow_mut();
 		let mut_buf = cell_buf.get_mut(&desc.id());
@@ -65,7 +65,7 @@ impl Behavior for Module {
 		}
 	}
 
-	fn write(self: &Self, desc: &Descriptor, buf: &mut Vec<u8>) -> Intention {
+	fn write(self: &Self, desc: &Descriptor, buf: &mut Vec<u8>) -> (Intention, Flush) {
 		let cell = self.client.lock().unwrap();
 		let mut cell_buf = cell.borrow_mut();
 		let mut_buf = cell_buf.get_mut(&desc.id());
@@ -86,15 +86,10 @@ impl Behavior for Module {
 
 				buf.append(client_buf);
 
-				Intention::Read
+				(Intention::Read, Flush::Auto)
 			},
-			None => Intention::Close(Some(Error::new("Client buffer is undefined")))
+			None => (Intention::Close(Some(Error::new("Client buffer is undefined"))), Flush::Auto)
 		}
-	}
-
-	fn flush(self: &Self, desc: &Descriptor, buf: &mut Vec<u8>) -> bool {
-		self.write(desc, buf);
-		true
 	}
 
 	fn close(self: &Self, desc: &Descriptor) {
