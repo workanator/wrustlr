@@ -1,4 +1,5 @@
 use std::fmt;
+use std::cmp;
 use mio;
 use wrust_types::Error;
 use wrust_types::net::connection::State;
@@ -46,4 +47,30 @@ impl fmt::Display for Intention {
 			Intention::Close(None) => write!(f, "Close"),
 		}
     }
+}
+
+
+impl cmp::PartialEq for Intention {
+	fn eq(&self, other: &Self) -> bool {
+		match *self {
+			Intention::Read => {
+				match *other {
+					Intention::Read => true,
+					_ => false
+				}
+			},
+			Intention::Write => {
+				match *other {
+					Intention::Write => true,
+					_ => false
+				}
+			},
+			Intention::Close(_) => {
+				match *other {
+					Intention::Close(_) => true,
+					_ => false
+				}
+			}
+		}
+	}
 }
