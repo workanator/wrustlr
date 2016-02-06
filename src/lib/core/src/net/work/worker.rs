@@ -1,14 +1,15 @@
 //! Client socket I/O operation `Processor`. 
 
+use std::io::Write;
 use std::sync::Arc;
-use std::thread;
 use std::sync::atomic::Ordering;
+use std::thread;
 use deque::Stolen;
 use mio::{TryRead, TryWrite, EventSet};
 use wrust_types::{Result, Error};
 use wrust_types::net::Protocol;
 use wrust_types::net::connection::State;
-use wrust_module::stream::{Behavior, Intention};
+use wrust_module::stream::{Behavior, Intention, Flush};
 use ::net::{EventChannel, Request};
 use ::net::client::Client;
 use ::net::server::Server;
@@ -72,7 +73,7 @@ impl Worker {
 									},
 									State::Flushing => {
 										assert!(events.is_writable(), "unexpected events; events={:?}", events);
-										Worker::flush(&server, &client, &event_channel);
+										Worker::write(&server, &client, &event_channel);
 									},
 									_ => unimplemented!(),
 								};
@@ -218,43 +219,27 @@ impl Worker {
 			.write(client.descriptor(), &mut buf);
 		let write_result = Worker::try_write_buf(client, &mut buf);
 
-		match write_result {
-			Ok(Some(_)) => {
-				// Re-register the socket with the event loop.
-				Worker::reregister(client, event_channel, further_action);
-			}
-			Ok(None) => {
-				// The socket wasn't actually ready, re-register the socket
-				// with the event loop
-				event_channel
-					.send(Request::Reregister {
-							client_token: *client.token(),
-							events: EventSet::writable(),
-						})
-					.unwrap();
-			}
-			Err(e) => {
-				panic!("got an error trying to write; err={:?}", e);
-			}
+		if further_action.1 == Flush::Force {
+			match Worker::try_flush(client) {
+				Err(msg) => error!("{}", msg),
+				Ok(_) => {}
+			};
 		}
-	}
-
-	fn flush(server: &Arc<Server>, client: &Arc<Client>, event_channel: &EventChannel) {
-		// Get data from the stream processing module and write to the stream
-		let mut buf: Vec<u8> = Vec::new();
-		let should_close = server.forward()
-			.flush(client.descriptor(), &mut buf);
-		let write_result = Worker::try_write_buf(client, &mut buf);
 
 		match write_result {
 			Ok(Some(_)) => {
 				// Re-register the socket with the event loop.
-				if should_close {
-					Worker::reregister(client, event_channel, Intention::Close(None));
+				if client.state() == State::Flushing {
+					if further_action.0 == Intention::Read {
+						event_channel
+							.send(Request::Close { client_token: *client.token() })
+							.unwrap();
+
+						return;
+					}
 				}
-				else {
-					Worker::reregister(client, event_channel, Intention::Write);
-				}
+
+				Worker::reregister(client, event_channel, further_action.0);
 			}
 			Ok(None) => {
 				// The socket wasn't actually ready, re-register the socket
@@ -300,6 +285,22 @@ impl Worker {
 					Err(msg) => Error::new("Cannot write to client socket").because(msg).result()
 				},
 				_ => Error::new("Cannot write to client socket because UDP is not supported").result()
+			}
+		})
+	}
+
+	fn try_flush(client: &Arc<Client>) -> Result<()> {
+		client.then_on_socket(|sock| -> Result<()> {
+			match sock {
+				&mut Protocol::Tcp(ref mut stream) => match stream.flush() {
+					Ok(()) => Ok(()),
+					Err(msg) => Error::new("Cannot flush client socket").because(msg).result()
+				},
+				&mut Protocol::Unix(ref mut stream) => match stream.flush() {
+					Ok(()) => Ok(()),
+					Err(msg) => Error::new("Cannot flush client socket").because(msg).result()
+				},
+				_ => Error::new("Cannot flush client socket because UDP is not supported").result()
 			}
 		})
 	}

@@ -4,7 +4,7 @@ use mio::tcp::TcpListener;
 use mio::unix::UnixListener;
 use wrust_types::net::Protocol;
 use wrust_types::net::connection::Descriptor;
-use wrust_module::stream::{Behavior, Intention};
+use wrust_module::stream::{Behavior, Intention, Flush};
 use super::ServerConf;
 
 pub type ServerProtocol = Protocol<TcpListener, (), UnixListener>;
@@ -36,19 +36,14 @@ impl Behavior for ForwardProxy {
 			.open(desc)
 	}
 
-	fn read(self: &Self, desc: &Descriptor, buf: &mut Vec<u8>) -> Intention {
+	fn read(self: &Self, desc: &Descriptor, buf: &Vec<u8>) -> Intention {
 		self.instance
 			.read(desc, buf)
 	}
 
-	fn write(self: &Self, desc: &Descriptor, buf: &mut Vec<u8>) -> Intention {
+	fn write(self: &Self, desc: &Descriptor, buf: &mut Vec<u8>) -> (Intention, Flush) {
 		self.instance
 			.write(desc, buf)
-	}
-
-	fn flush(self: &Self, desc: &Descriptor, buf: &mut Vec<u8>) -> bool {
-		self.instance
-			.flush(desc, buf)
 	}
 
 	fn close(self: &Self, desc: &Descriptor) {
