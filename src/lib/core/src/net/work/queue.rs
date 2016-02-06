@@ -3,6 +3,7 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
+use std::time::Duration;
 use deque;
 use mio;
 use wrust_async::concurrent::{Notify, ReadyFlag};
@@ -29,7 +30,6 @@ pub enum Parcel {
 
 /// I/O processor event queue
 pub struct Queue {
-	_pool: deque::BufferPool<Parcel>,
 	worker: deque::Worker<Parcel>,
 	stealer: deque::Stealer<Parcel>,
 	ready: ReadyFlag,
@@ -42,11 +42,9 @@ pub struct Queue {
 impl Queue {
 	/// Create a new event queue.
 	pub fn new(worker_count_max: usize) -> Queue {
-		let pool = deque::BufferPool::new();
-		let (worker, stealer) = pool.deque();
+		let (worker, stealer) = deque::new();
 
 		Queue {
-			_pool: pool,
 			worker: worker,
 			stealer: stealer,
 			ready: ReadyFlag::new(),
@@ -103,7 +101,7 @@ impl Queue {
 		// .. wait until all workers done
 		while self.worker_count.load(Ordering::SeqCst) > 0 {
 			self.ready.raise(Notify::All);
-			thread::sleep_ms(100);
+			thread::sleep(Duration::from_millis(100));
 		}
 	}
 
