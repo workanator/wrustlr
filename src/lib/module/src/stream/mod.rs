@@ -1,10 +1,12 @@
 //! Stream processing module facility and behavior.
 
 mod intention;
+mod flush;
 
 use wrust_types::net::connection::Descriptor;
 
 pub use self::intention::Intention;
+pub use self::flush::Flush;
 
 /// Each stream processing module must folow the `Behavior`.
 pub trait Behavior: Send + Sync {
@@ -17,17 +19,10 @@ pub trait Behavior: Send + Sync {
 
 	/// A new data chunk has been read from the client connection into `buf` and
 	/// the stream processing module can handle it.
-	/// Mutability is required for module chaining.
-	fn read(self: &Self, desc: &Descriptor, buf: &mut Vec<u8>) -> Intention;
+	fn read(self: &Self, desc: &Descriptor, buf: &Vec<u8>) -> Intention;
 
 	/// The stream processing module is ready to output some data in `buf`.
-	fn write(self: &Self, desc: &Descriptor, buf: &mut Vec<u8>) -> Intention;
-
-	/// The `flush`ing happens when the client connection is probably half shutdown or even
-	/// closed and the stream processing module has the last chance to write any data left.  
-	/// The method must return `true` if the client connection should be closed after delivery
-	/// of the data and `false` if there are more data to output.
-	fn flush(self: &Self, desc: &Descriptor, buf: &mut Vec<u8>) -> bool;
+	fn write(self: &Self, desc: &Descriptor, buf: &mut Vec<u8>) -> (Intention, Flush);
 
 	/// The client connection is going to be close and the stream processing module has a chance
 	/// to free related resources.
