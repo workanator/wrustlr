@@ -1,14 +1,56 @@
 use std::fmt;
 use std::sync::Mutex;
-use std::cell::RefCell;
+use std::cell::{RefCell, UnsafeCell};
+use std::ptr;
 use mio;
 use mio::tcp::*;
 use mio::unix::*;
 use wrust_types::Result;
 use wrust_types::net::Protocol;
 use wrust_types::net::connection::{State, Descriptor};
+use wrust_module::stream::{Intention, Flush};
+
 
 pub type ClientProtocol = Protocol<TcpStream, (), UnixStream>;
+
+
+pub struct LeftData {
+	data: Vec<u8>,
+	intention: Intention,
+	flush: Flush,
+}
+
+
+unsafe impl Send for LeftData {}
+unsafe impl Sync for LeftData {}
+
+
+impl LeftData {
+	pub fn new(data: Vec<u8>, intention: Intention, flush: Flush) -> LeftData {
+		LeftData {
+			data: data,
+			intention: intention,
+			flush: flush,
+		}
+	}
+
+	pub fn data(&self) -> &Vec<u8> {
+		&self.data
+	}
+
+	pub fn intention(&self) -> &Intention {
+		&self.intention
+	}
+
+	pub fn flush(&self) -> &Flush {
+		&self.flush
+	}
+
+	pub fn consume(self) -> (Vec<u8>, (Intention, Flush)) {
+		(self.data, (self.intention, self.flush))
+	}
+}
+
 
 pub struct Client {
 	server_token: mio::Token,
@@ -16,8 +58,9 @@ pub struct Client {
 	socket: Mutex<RefCell<ClientProtocol>>,
 	state: Mutex<RefCell<State>>,
 	descriptor: Descriptor,
-	buffer: Vec<u8>,
+	left_data: Mutex<UnsafeCell<Option<LeftData>>>,
 }
+
 
 impl Client {
 	pub fn new(server_token: mio::Token, token: mio::Token, socket: ClientProtocol) -> Client {
@@ -36,7 +79,7 @@ impl Client {
 			socket: Mutex::new(RefCell::new(socket)),
 			state: Mutex::new(RefCell::new(State::Opened)),
 			descriptor: descriptor,
-			buffer: Vec::new(),
+			left_data: Mutex::new(UnsafeCell::new(None)),
 		}
 	}
 
@@ -69,6 +112,21 @@ impl Client {
 		let guard = self.socket.lock().unwrap();
 		let mut cell = guard.borrow_mut();
 		func(&mut *cell)
+	}
+
+	pub fn left_data(&self) -> Option<LeftData> {
+		let cell = self.left_data.lock().unwrap();
+		let mut left_data: Option<LeftData> = None;
+		unsafe { ptr::swap(&mut left_data, cell.get()); }
+
+		left_data
+	}
+
+	pub fn set_left_data(&self, data: Option<LeftData>) {
+		let cell = self.left_data.lock().unwrap();
+		let mut left_data = data;
+
+		unsafe { ptr::swap(&mut left_data, cell.get()); }
 	}
 }
 

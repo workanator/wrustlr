@@ -11,7 +11,7 @@ use wrust_types::net::Protocol;
 use wrust_types::net::connection::State;
 use wrust_module::stream::{Behavior, Intention, Flush};
 use ::net::{EventChannel, Request};
-use ::net::client::Client;
+use ::net::client::{Client, LeftData};
 use ::net::server::Server;
 use super::{Queue, Parcel};
 
@@ -168,13 +168,10 @@ impl Worker {
 		// Check what we'v got
 		match read_result {
 			Ok(Some(0)) => {
-				// If there is any data buffered up, attempt to write it back
-				// to the client. Either the socket is currently closed, in
-				// which case writing will result in an error, or the client
-				// only shutdown half of the socket and is still expecting to
-				// receive the buffered data back. See
-				// test_handling_client_shutdown() for an illustration
-				println!("    read 0 bytes from client; buffered={}", buf.len());
+				// The socket is currently closed, in which case writing
+				// will result in an error, or the client only shutdown
+				// half of the socket and is still expecting to receive
+				// the buffered data back.
 
 				// Change the client state
 				client.set_state(State::Flushing);
@@ -186,9 +183,7 @@ impl Worker {
 						})
 					.unwrap();
 			},
-			Ok(Some(n)) => {
-				println!("read {} bytes", n);
-
+			Ok(Some(_)) => {
 				// Pass read data to the stream processing module
 				let further_action = server.forward()
 					.read(client.descriptor(), &mut buf);
@@ -213,33 +208,64 @@ impl Worker {
 	}
 
 	fn write(server: &Arc<Server>, client: &Arc<Client>, event_channel: &EventChannel) {
-		// Get data from the stream processing module and write to the stream
-		let mut buf: Vec<u8> = Vec::new();
-		let further_action = server.forward()
-			.write(client.descriptor(), &mut buf);
+		// If there is data left unwritten since the last write operation
+		// then we try to write it before we get data from the stream processing module
+		// and write to the stream
+		let left_data = client.left_data();
+
+		let (mut buf, further_action) = match left_data {
+			Some(data) => {
+				// Some data left
+				data.consume()
+			},
+			None => {
+				// Get the new chunk of data from the module
+				let mut buf = Vec::new();
+				let further_action = server.forward()
+					.write(client.descriptor(), &mut buf);
+
+				(buf, further_action)
+			}
+		};
+
 		let write_result = Worker::try_write_buf(client, &mut buf);
 
-		if further_action.1 == Flush::Force {
-			match Worker::try_flush(client) {
-				Err(msg) => error!("{}", msg),
-				Ok(_) => {}
-			};
-		}
-
+		// Check the result of the I/O operation
 		match write_result {
-			Ok(Some(_)) => {
-				// Re-register the socket with the event loop.
-				if client.state() == State::Flushing {
-					if further_action.0 == Intention::Read {
-						event_channel
-							.send(Request::Close { client_token: *client.token() })
-							.unwrap();
-
-						return;
-					}
+			Ok(Some(n)) => {
+				if n < buf.len() {
+					// Not all data has been written. Drain the written part and
+					// left unwritten data for future write tries.
+					buf.drain(0..n);
+					client.set_left_data(Some(LeftData::new(buf, further_action.0, further_action.1)));
+					Worker::reregister(client, event_channel, Intention::Write);
 				}
+				else {
+					// When one half of the socket is closed valid intentions
+					// only are Close ot Write.
+					if client.state() == State::Flushing {
+						if further_action.0 == Intention::Read {
+							// Read channel is closed at the moment so further reading
+							// has no reason. Closing the connection.
+							event_channel
+								.send(Request::Close { client_token: *client.token() })
+								.unwrap();
 
-				Worker::reregister(client, event_channel, further_action.0);
+							return;
+						}
+					}
+
+					// Force flush buffered data because the modele asked for that
+					if further_action.1 == Flush::Force {
+						match Worker::try_flush(client) {
+							Err(msg) => error!("{}", msg),
+							Ok(_) => {}
+						};
+					}
+
+					// Re-register the socket with the event loop.
+					Worker::reregister(client, event_channel, further_action.0);
+				}
 			}
 			Ok(None) => {
 				// The socket wasn't actually ready, re-register the socket
