@@ -86,7 +86,7 @@ impl Behavior for Module {
 
 				buf.append(client_buf);
 
-				(Intention::Read, Flush::Auto)
+				(Intention::Read, Flush::Force)
 			},
 			None => (Intention::Close(Some(Error::new("Client buffer is undefined"))), Flush::Auto)
 		}
