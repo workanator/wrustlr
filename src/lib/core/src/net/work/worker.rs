@@ -1,4 +1,4 @@
-//! Client socket I/O operation `Processor`. 
+//! Client socket I/O operation `Worker`. 
 
 use std::io::Write;
 use std::sync::Arc;
@@ -16,7 +16,7 @@ use ::net::server::Server;
 use super::{Queue, Parcel};
 
 
-/// I/O event processor  
+/// I/O event worker  
 /// New `Worker`s can be spawned using method `worker` on the live queue.
 pub struct Worker {
 	_child: thread::JoinHandle<()>,
@@ -83,7 +83,7 @@ impl Worker {
 				};
 			}
 
-			// Decrease the number of running processors
+			// Decrease the number of running workers
 			counter.fetch_sub(1, Ordering::SeqCst);
 
 			debug!("Worker {} finished", id);
