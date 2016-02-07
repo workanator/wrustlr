@@ -7,7 +7,9 @@ use wrust_types::net::connection::Descriptor;
 use wrust_module::stream::{Behavior, Intention, Flush};
 use super::ServerConf;
 
+
 pub type ServerProtocol = Protocol<TcpListener, (), UnixListener>;
+
 
 #[allow(dead_code)]
 pub struct Server {
@@ -16,6 +18,9 @@ pub struct Server {
 	socket: ServerProtocol,
 	forward: ForwardProxy,
 }
+
+
+unsafe impl Sync for Server {}
 
 
 pub struct ForwardProxy {

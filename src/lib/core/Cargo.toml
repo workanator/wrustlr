@@ -17,6 +17,6 @@ wrust_conf = { path = "../conf", version = "*" }
 wrust_module = { path = "../module", version = "*" }
 wrust_async = { path = "../async", version = "*" }
 bytes = "*"
-mio = "0.4"
+mio = "0.5"
 log = "*"
 deque = "*"

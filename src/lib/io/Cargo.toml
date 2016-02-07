@@ -12,6 +12,6 @@ plugin = false
 
 [dependencies]
 bytes = "*"
-mio = "0.4"
+mio = "0.5"
 libc = "*"
 wrust_types = { path = "../types", version = "*" }

@@ -2,6 +2,7 @@ use std::thread;
 use std::fs;
 use std::path::Path;
 use mio;
+use mio::{EventSet, PollOpt};
 use wrust_types::{Error, Result};
 use wrust_types::channel::DuplexChannel;
 use wrust_types::net::Protocol;
@@ -66,7 +67,7 @@ impl Core {
 		let err = instance.servers.each(|ref serv| -> Option<Error> {
 			match *serv.socket() {
 				Protocol::Tcp(ref listener) => {
-					match event_loop.register(listener, *serv.token()) {
+					match event_loop.register(listener, *serv.token(), EventSet::readable() | EventSet::writable(), PollOpt::edge() | PollOpt::oneshot()) {
 						Ok(_) => {
 							if let Protocol::Tcp(ref details) = serv.config().listen.protocol {
 								info!("Listen on {}:{} using TCP", details.address, details.port);
@@ -78,7 +79,7 @@ impl Core {
 					}
 				},
 				Protocol::Unix(ref listener) => {
-					match event_loop.register(listener, *serv.token()) {
+					match event_loop.register(listener, *serv.token(), EventSet::readable() | EventSet::writable(), PollOpt::edge() | PollOpt::oneshot()) {
 						Ok(_) => {
 							if let Protocol::Unix(ref details) = serv.config().listen.protocol {
 								info!("Listen on {} using UNIX", details.path);
@@ -242,19 +243,19 @@ impl mio::Handler for Core {
 				let _ = self.clients[client_token].then_on_socket(|socket| {
 					socket
 						.tcp_and_then(|sock| {
-							event_loop.register_opt(
+							event_loop.register(
 									sock,
 									client_token,
 									events,
-									mio::PollOpt::edge() | mio::PollOpt::oneshot())
+									PollOpt::edge() | PollOpt::oneshot())
 								.unwrap();
 						})
 						.unix_and_then(|sock| {
-							event_loop.register_opt(
+							event_loop.register(
 									sock,
 									client_token,
 									events,
-									mio::PollOpt::edge() | mio::PollOpt::oneshot())
+									PollOpt::edge() | PollOpt::oneshot())
 								.unwrap();
 						});
 

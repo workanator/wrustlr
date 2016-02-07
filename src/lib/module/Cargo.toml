@@ -11,7 +11,7 @@ test = true
 plugin = false
 
 [dependencies]
-mio = "0.4"
+mio = "0.5"
 wrust_types = { path = "../types", version = "*" }
 wrust_io = { path = "../io", version = "*" }
 wrust_conf = { path = "../conf", version = "*" }
