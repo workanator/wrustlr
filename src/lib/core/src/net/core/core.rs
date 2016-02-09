@@ -56,7 +56,8 @@ impl Core {
 		};
 
 		// Create and initialize event loop
-		let event_loop = mio::EventLoop::new();
+		let loop_config = mio::EventLoopConfig::new();
+		let event_loop = mio::EventLoop::configured(loop_config);
 		if event_loop.is_err() {
 			return Error::new("Event loop failed to initialize").result()
 		}
@@ -67,7 +68,7 @@ impl Core {
 		let err = instance.servers.each(|ref serv| -> Option<Error> {
 			match *serv.socket() {
 				Protocol::Tcp(ref listener) => {
-					match event_loop.register(listener, *serv.token(), EventSet::readable() | EventSet::writable(), PollOpt::edge() | PollOpt::oneshot()) {
+					match event_loop.register(listener, *serv.token(), EventSet::all(), PollOpt::edge() | PollOpt::oneshot()) {
 						Ok(_) => {
 							if let Protocol::Tcp(ref details) = serv.config().listen.protocol {
 								info!("Listen on {}:{} using TCP", details.address, details.port);
@@ -79,7 +80,7 @@ impl Core {
 					}
 				},
 				Protocol::Unix(ref listener) => {
-					match event_loop.register(listener, *serv.token(), EventSet::readable() | EventSet::writable(), PollOpt::edge() | PollOpt::oneshot()) {
+					match event_loop.register(listener, *serv.token(), EventSet::all(), PollOpt::edge() | PollOpt::oneshot()) {
 						Ok(_) => {
 							if let Protocol::Unix(ref details) = serv.config().listen.protocol {
 								info!("Listen on {} using UNIX", details.path);
@@ -102,8 +103,18 @@ impl Core {
 		thread::spawn(move || {
 			instance.stage = Stage::Listen;
 
-			if let Ok(_) = event_loop.run(&mut instance) {
-			    info!("Normal server shutdown");
+			let mut success = true;
+			while event_loop.is_running() {
+				// Execute ticks as long as the event loop is running
+				if let Err(msg) = event_loop.run_once(&mut instance, Some(100)) {
+					error!("Shutting down the loop immediately because of {}", msg);
+					event_loop.shutdown();
+					success = false;
+				}
+			};
+
+			if !success {
+				info!("Normal server shutdown");
 			}
 		});
 

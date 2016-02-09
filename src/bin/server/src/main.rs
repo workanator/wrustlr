@@ -110,6 +110,8 @@ fn main() {
 							if let Err(msg) = channel.recv() {
 								error!("Read SHUTDOWN response failed with message {}", msg);
 							}
+							else {
+							}
 					    }
 
 					    break;
