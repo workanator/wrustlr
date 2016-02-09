@@ -57,12 +57,10 @@ impl Core {
 
 		// Create and initialize event loop
 		let loop_config = mio::EventLoopConfig::new();
-		let event_loop = mio::EventLoop::configured(loop_config);
-		if event_loop.is_err() {
-			return Error::new("Event loop failed to initialize").result()
-		}
-
-		let mut event_loop = event_loop.unwrap();
+		let mut event_loop = match mio::EventLoop::configured(loop_config) {
+			Ok(event_loop) => event_loop,
+			Err(msg) => return Error::new("Event loop failed to initialize").because(msg).result(),
+		};
 
 		// .. register servers
 		let err = instance.servers.each(|ref serv| -> Option<Error> {
@@ -218,7 +216,10 @@ impl mio::Handler for Core {
 				self.queue.shutdown(true);
 				event_loop.shutdown();
 				self.cleanup();
-				self.channel.send("ok").unwrap();
+
+				if let Err(msg) = self.channel.send("ok") {
+					error!("{}", msg);
+				}
 			}
 		}
 	}
@@ -231,14 +232,14 @@ impl mio::Handler for Core {
 				let _ = self.clients[client_token].then_on_socket(|socket| {
 					socket
 						.tcp_and_then(|sock| {
-							event_loop
-								.deregister(sock)
-								.unwrap();
+							if let Err(msg) = event_loop.deregister(sock) {
+								error!("{}", msg);
+							}
 						})
 						.unix_and_then(|sock| {
-							event_loop
-								.deregister(sock)
-								.unwrap();
+							if let Err(msg) = event_loop.deregister(sock) {
+								error!("{}", msg);
+							}
 						});
 
 					Ok(())
@@ -254,20 +255,14 @@ impl mio::Handler for Core {
 				let _ = self.clients[client_token].then_on_socket(|socket| {
 					socket
 						.tcp_and_then(|sock| {
-							event_loop.register(
-									sock,
-									client_token,
-									events,
-									PollOpt::edge() | PollOpt::oneshot())
-								.unwrap();
+							if let Err(msg) = event_loop.register(sock, client_token, events, PollOpt::edge() | PollOpt::oneshot()) {
+								error!("{}", msg);
+							}
 						})
 						.unix_and_then(|sock| {
-							event_loop.register(
-									sock,
-									client_token,
-									events,
-									PollOpt::edge() | PollOpt::oneshot())
-								.unwrap();
+							if let Err(msg) = event_loop.register(sock, client_token, events, PollOpt::edge() | PollOpt::oneshot()) {
+								error!("{}", msg);
+							}
 						});
 
 					Ok(())
@@ -279,20 +274,14 @@ impl mio::Handler for Core {
 				let _ = self.clients[client_token].then_on_socket(|socket| {
 					socket
 						.tcp_and_then(|sock| {
-							event_loop.reregister(
-									sock,
-									client_token,
-									events,
-									mio::PollOpt::oneshot())
-								.unwrap();
+							if let Err(msg) = event_loop.reregister(sock, client_token, events, PollOpt::oneshot()) {
+								error!("{}", msg);
+							}
 						})
 						.unix_and_then(|sock| {
-							event_loop.reregister(
-									sock,
-									client_token,
-									events,
-									mio::PollOpt::oneshot())
-								.unwrap();
+							if let Err(msg) = event_loop.reregister(sock, client_token, events, PollOpt::oneshot()) {
+								error!("{}", msg);
+							}
 						});
 
 					Ok(())
