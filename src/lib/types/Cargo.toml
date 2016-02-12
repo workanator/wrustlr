@@ -11,4 +11,4 @@ test = true
 plugin = false
 
 [dependencies]
-mio = "*"
+wrust_io = { path = "../io", version = "*" }

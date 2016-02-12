@@ -3,7 +3,7 @@ pub mod server;
 pub mod work;
 pub mod core;
 
-use mio;
+use wrust_io::mio;
 use wrust_types::channel::{Channel};
 
 pub type CommandChannel = Channel<&'static str>;

@@ -5,7 +5,7 @@ use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::thread;
 use deque::Stolen;
-use mio::{TryRead, TryWrite, EventSet};
+use wrust_io::mio::{TryRead, TryWrite, EventSet};
 use wrust_types::{Result, Error};
 use wrust_types::net::Protocol;
 use wrust_types::net::connection::State;

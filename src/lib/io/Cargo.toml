@@ -11,7 +11,5 @@ test = true
 plugin = false
 
 [dependencies]
-wrust_types = { path = "../types", version = "*" }
 bytes = "*"
 mio = "*"
-libc = "*"

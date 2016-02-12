@@ -1,7 +1,7 @@
 use std::fmt;
-use mio;
-use mio::tcp::TcpListener;
-use mio::unix::UnixListener;
+use wrust_io::mio;
+use wrust_io::mio::tcp::TcpListener;
+use wrust_io::mio::unix::UnixListener;
 use wrust_types::net::Protocol;
 use wrust_types::net::connection::Descriptor;
 use wrust_module::stream::{Behavior, Intention, Flush};

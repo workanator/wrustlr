@@ -1,9 +1,9 @@
 use std::ops::Index;
 use std::sync::Arc;
 use std::path::Path;
-use mio;
-use mio::tcp::TcpListener;
-use mio::unix::UnixListener;
+use wrust_io::mio;
+use wrust_io::mio::tcp::TcpListener;
+use wrust_io::mio::unix::UnixListener;
 use wrust_types::{Error, Result};
 use wrust_types::net::Protocol;
 use wrust_module::Category;

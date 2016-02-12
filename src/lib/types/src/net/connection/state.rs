@@ -1,5 +1,5 @@
 use std::fmt;
-use mio;
+use wrust_io::mio;
 
 /// The current state of the client connection.
 #[derive(Debug, Clone, PartialEq)]

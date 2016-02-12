@@ -1,10 +1,6 @@
 //! Wrust I/O
 
-extern crate bytes;
-extern crate mio;
-extern crate libc;
-extern crate wrust_types;
+extern crate bytes as bytes_dep;
+extern crate mio as mio_dep;
 
-pub mod mem;
-
-pub use mio::*;
+pub mod mio;

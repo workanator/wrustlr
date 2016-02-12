@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 use std::time::Duration;
 use deque;
-use mio;
+use wrust_io::mio;
 use wrust_async::concurrent::{Notify, ReadyFlag};
 use ::net::EventChannel;
 use ::net::server::Server;

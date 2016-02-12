@@ -1,7 +1,7 @@
 use std::ops::{Index, IndexMut};
 use std::sync::Arc;
-use mio;
-use mio::util::Slab;
+use wrust_io::mio;
+use wrust_io::mio::util::Slab;
 use wrust_types::{Result, Error};
 use super::Client;
 use super::client::ClientProtocol;

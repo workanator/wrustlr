@@ -1,8 +1,8 @@
 use std::thread;
 use std::fs;
 use std::path::Path;
-use mio;
-use mio::{EventSet, PollOpt};
+use wrust_io::mio;
+use wrust_io::mio::{EventSet, PollOpt};
 use wrust_types::{Error, Result};
 use wrust_types::channel::DuplexChannel;
 use wrust_types::net::Protocol;

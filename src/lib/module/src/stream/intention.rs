@@ -1,6 +1,6 @@
 use std::fmt;
 use std::cmp;
-use mio;
+use wrust_io::mio;
 use wrust_types::Error;
 use wrust_types::net::connection::State;
 

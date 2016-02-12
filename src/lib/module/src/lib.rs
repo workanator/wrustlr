@@ -1,6 +1,5 @@
 //! Wruet Module alma mater.
 
-extern crate mio;
 extern crate wrust_types;
 extern crate wrust_io;
 extern crate wrust_conf;

@@ -14,4 +14,3 @@ plugin = false
 wrust_types = { path = "../types", version = "*" }
 wrust_io = { path = "../io", version = "*" }
 wrust_conf = { path = "../conf", version = "*" }
-mio = "*"
