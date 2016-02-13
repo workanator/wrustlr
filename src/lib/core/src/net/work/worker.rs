@@ -52,15 +52,15 @@ impl Worker {
 								done = true;
 							},
 							Parcel::Open { server, client } => {
-								debug!("{} -> {:?} opens {:?}", id, *server, *client);
+								trace!("{} -> {:?} opens {:?}", id, *server, *client);
 								Worker::open(&server, &client, &event_channel);
 							},
 							Parcel::Close { server, client } => {
-								debug!("{} -> {:?} closes {:?}", id, *server, *client);
+								trace!("{} -> {:?} closes {:?}", id, *server, *client);
 								Worker::close(&server, &client, &event_channel);
 							},
 							Parcel::Ready { server, client, events } => {
-								debug!("{} -> {:?} processes {:?} for {:?}", id, *server, *client, events);
+								trace!("{} -> {:?} processes {:?} for {:?}", id, *server, *client, events);
 
 								match client.state() {
 									State::Reading => {
@@ -177,7 +177,7 @@ impl Worker {
 				client.set_state(State::Flushing);
 
 				event_channel
-					.send(Request::Register {
+					.send(Request::Reregister {
 							client_token: *client.token(),
 							events: EventSet::writable(),
 						})

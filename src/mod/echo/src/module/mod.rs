@@ -72,6 +72,11 @@ impl Behavior for Module {
 
 		match mut_buf {
 			Some(client_buf) => {
+				let should_close = match client_buf.first() {
+					Some(&b'Q') => true,
+					_ => false,
+				};
+
 				if self.reverse {
 					if let Some(c) = client_buf.pop() {
 						client_buf.reverse();
@@ -86,7 +91,12 @@ impl Behavior for Module {
 
 				buf.append(client_buf);
 
-				(Intention::Read, Flush::Force)
+				if should_close {
+					(Intention::Close(None), Flush::Auto)
+				}
+				else {
+					(Intention::Read, Flush::Force)
+				}
 			},
 			None => (Intention::Close(Some(Error::new("Client buffer is undefined"))), Flush::Auto)
 		}

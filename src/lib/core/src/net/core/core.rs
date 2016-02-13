@@ -56,7 +56,7 @@ impl Core {
 		};
 
 		// Create and initialize event loop
-		let loop_config = mio::EventLoopConfig::new();
+		let loop_config = mio::EventLoopConfig::default();
 		let mut event_loop = match mio::EventLoop::configured(loop_config) {
 			Ok(event_loop) => event_loop,
 			Err(msg) => return Error::new("Event loop failed to initialize").because(msg).result(),
@@ -66,7 +66,7 @@ impl Core {
 		let err = instance.servers.each(|ref serv| -> Option<Error> {
 			match *serv.socket() {
 				Protocol::Tcp(ref listener) => {
-					match event_loop.register(listener, *serv.token(), EventSet::all(), PollOpt::edge() | PollOpt::oneshot()) {
+					match event_loop.register(listener, *serv.token(), EventSet::all(), PollOpt::edge()) {
 						Ok(_) => {
 							if let Protocol::Tcp(ref details) = serv.config().listen.protocol {
 								info!("Listen on {}:{} using TCP", details.address, details.port);
@@ -78,7 +78,7 @@ impl Core {
 					}
 				},
 				Protocol::Unix(ref listener) => {
-					match event_loop.register(listener, *serv.token(), EventSet::all(), PollOpt::edge() | PollOpt::oneshot()) {
+					match event_loop.register(listener, *serv.token(), EventSet::all(), PollOpt::edge()) {
 						Ok(_) => {
 							if let Protocol::Unix(ref details) = serv.config().listen.protocol {
 								info!("Listen on {} using UNIX", details.path);
@@ -227,7 +227,7 @@ impl mio::Handler for Core {
 	fn notify(&mut self, event_loop: &mut mio::EventLoop<Self>, msg: Self::Message) {
 		match msg {
 			Request::Close { client_token } => {
-				debug!("Request::Close");
+				debug!("Request::Close {:?}", client_token);
 				// Deregister the client connection
 				let _ = self.clients[client_token].then_on_socket(|socket| {
 					socket
@@ -250,7 +250,7 @@ impl mio::Handler for Core {
 					.remove(client_token);
 			},
 			Request::Register { client_token, events } => {
-				debug!("Request::Register");
+				debug!("Request::Register {:?} for {:?}", client_token, events);
 				// Register the client connection for the new events
 				let _ = self.clients[client_token].then_on_socket(|socket| {
 					socket
@@ -270,16 +270,16 @@ impl mio::Handler for Core {
 			},
 			Request::Reregister { client_token, events } => {
 				// Reregister the client connection for the new events
-				debug!("Request::Reregister");
+				debug!("Request::Reregister {:?} for {:?}", client_token, events);
 				let _ = self.clients[client_token].then_on_socket(|socket| {
 					socket
 						.tcp_and_then(|sock| {
-							if let Err(msg) = event_loop.reregister(sock, client_token, events, PollOpt::oneshot()) {
+							if let Err(msg) = event_loop.reregister(sock, client_token, events, PollOpt::edge() | PollOpt::oneshot()) {
 								error!("{}", msg);
 							}
 						})
 						.unix_and_then(|sock| {
-							if let Err(msg) = event_loop.reregister(sock, client_token, events, PollOpt::oneshot()) {
+							if let Err(msg) = event_loop.reregister(sock, client_token, events, PollOpt::edge() | PollOpt::oneshot()) {
 								error!("{}", msg);
 							}
 						});
