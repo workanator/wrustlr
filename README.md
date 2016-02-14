@@ -1,6 +1,6 @@
 # Wrustlr #
 
-Web Rust Layer is the web server written in Rust and for Rust.
+Web Rust Layer is the net/web server written in Rust and for Rust.
 
 ## Building ##
 
