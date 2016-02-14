@@ -4,7 +4,7 @@ Web Rust Layer is the net/web server written in Rust and for Rust.
 
 ## Building ##
 
-### Build server ###
+### Build the server binary ###
 
 ```
 make
