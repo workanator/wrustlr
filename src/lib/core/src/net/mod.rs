@@ -11,12 +11,12 @@ pub type EventChannel = mio::Sender<Request>;
 
 /// Listener event loop messaging enum.
 pub enum Request {
-	/// `Close` the client connection behind the `client_token`.
+	/// `Close` the client connection.
 	Close { client_token: mio::Token },
 
-	/// `Register` the client connection for further I/O events.
-	Register { client_token: mio::Token, events: mio::EventSet },
+	/// `Open` the client connection.
+	Open { client_token: mio::Token, events: mio::EventSet },
 
-	/// `Reregister` the client connection for further I/O events.
-	Reregister { client_token: mio::Token, events: mio::EventSet },
+	/// Push the client connection into the queue to `Wait` for further I/O events.
+	Wait { client_token: mio::Token, events: mio::EventSet },
 }

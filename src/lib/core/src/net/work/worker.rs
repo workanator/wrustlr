@@ -116,7 +116,7 @@ impl Worker {
 			client.set_state(further_action.as_state());
 
 			event_channel
-				.send(Request::Register {
+				.send(Request::Open {
 						client_token: *client.token(),
 						events: further_action.as_event_set(),
 					})
@@ -152,7 +152,7 @@ impl Worker {
 			client.set_state(intention.as_state());
 
 			event_channel
-				.send(Request::Reregister {
+				.send(Request::Wait {
 						client_token: *client.token(),
 						events: intention.as_event_set(),
 					})
@@ -177,7 +177,7 @@ impl Worker {
 				client.set_state(State::Flushing);
 
 				event_channel
-					.send(Request::Reregister {
+					.send(Request::Wait {
 							client_token: *client.token(),
 							events: EventSet::writable(),
 						})
@@ -195,7 +195,7 @@ impl Worker {
 			},
 			Ok(None) => {
 				event_channel
-					.send(Request::Reregister {
+					.send(Request::Wait {
 							client_token: *client.token(),
 							events: EventSet::readable(),
 						})
@@ -271,7 +271,7 @@ impl Worker {
 				// The socket wasn't actually ready, re-register the socket
 				// with the event loop
 				event_channel
-					.send(Request::Reregister {
+					.send(Request::Wait {
 							client_token: *client.token(),
 							events: EventSet::writable(),
 						})

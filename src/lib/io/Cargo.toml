@@ -12,5 +12,4 @@ plugin = false
 
 [dependencies]
 bytes = "*"
-#mio = "*"
-mio = { path = "/devel/projects/rust/mio5", version = "0.5" }
+mio = "*"

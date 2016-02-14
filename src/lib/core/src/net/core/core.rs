@@ -228,29 +228,13 @@ impl mio::Handler for Core {
 		match msg {
 			Request::Close { client_token } => {
 				debug!("Request::Close {:?}", client_token);
-				// Deregister the client connection
-				let _ = self.clients[client_token].then_on_socket(|socket| {
-					socket
-						.tcp_and_then(|sock| {
-							if let Err(msg) = event_loop.deregister(sock) {
-								error!("{}", msg);
-							}
-						})
-						.unix_and_then(|sock| {
-							if let Err(msg) = event_loop.deregister(sock) {
-								error!("{}", msg);
-							}
-						});
-
-					Ok(())
-				});
-
 				// Remove the client connection from the registry
+				// what results in socket closing
 				self.clients
 					.remove(client_token);
 			},
-			Request::Register { client_token, events } => {
-				debug!("Request::Register {:?} for {:?}", client_token, events);
+			Request::Open { client_token, events } => {
+				debug!("Request::Open {:?} for {:?}", client_token, events);
 				// Register the client connection for the new events
 				let _ = self.clients[client_token].then_on_socket(|socket| {
 					socket
@@ -268,9 +252,9 @@ impl mio::Handler for Core {
 					Ok(())
 				});
 			},
-			Request::Reregister { client_token, events } => {
+			Request::Wait { client_token, events } => {
 				// Reregister the client connection for the new events
-				debug!("Request::Reregister {:?} for {:?}", client_token, events);
+				debug!("Request::Wait {:?} for {:?}", client_token, events);
 				let _ = self.clients[client_token].then_on_socket(|socket| {
 					socket
 						.tcp_and_then(|sock| {
