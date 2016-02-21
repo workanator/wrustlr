@@ -2,15 +2,12 @@
 
 use wrust_types::{Error, Result};
 use wrust_conf::{Conf, FromConf};
-use ::conf::LogConf;
 
 
 /// Core settings
 pub struct CoreConf {
 	/// Worker count
 	pub worker_count: u16,
-	/// Logger settings
-	pub log: LogConf,
 }
 
 
@@ -28,12 +25,8 @@ impl FromConf for CoreConf {
 			None => return Error::new(format!("Worker Count is required at '{}'", xpath)).result(),
 		};
 
-		// Read logging config
-		let log_conf = try!(LogConf::from_conf(config, &format!("{}.log", xpath)));
-
 		Ok(CoreConf {
 			worker_count: worker_count,
-			log: log_conf,
 		})
 	}
 }
