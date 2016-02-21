@@ -11,3 +11,4 @@ test = true
 plugin = false
 
 [dependencies]
+crossbeam = "*"

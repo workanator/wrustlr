@@ -1,4 +1,12 @@
 [root]
 name = "wrust_async"
 version = "0.1.0"
+dependencies = [
+ "crossbeam 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "crossbeam"
+version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 

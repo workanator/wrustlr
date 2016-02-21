@@ -4,7 +4,7 @@ use std::io::Write;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::thread;
-use deque::Stolen;
+use wrust_async::crossbeam::sync::chase_lev::Steal;
 use wrust_io::mio::{TryRead, TryWrite, EventSet};
 use wrust_types::{Result, Error};
 use wrust_types::net::Protocol;
@@ -39,14 +39,14 @@ impl Worker {
 			// The main loop where the worker tries to steal parcels from the deque and process them
 			while !done {
 				match stealer.steal() {
-					Stolen::Empty => {
+					Steal::Empty => {
 						// No items in the deque, the worker can sleep
 						ready.wait();
 					},
-					Stolen::Abort => {
+					Steal::Abort => {
 						// Do nothing, just try to steal again
 					},
-					Stolen::Data(parcel) => {
+					Steal::Data(parcel) => {
 						match parcel {
 							Parcel::Shutdown => {
 								done = true;

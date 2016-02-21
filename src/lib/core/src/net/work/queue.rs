@@ -4,8 +4,8 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 use std::time::Duration;
-use deque;
 use wrust_io::mio;
+use wrust_async::crossbeam::sync::chase_lev;
 use wrust_async::concurrent::{Notify, ReadyFlag};
 use ::net::EventChannel;
 use ::net::server::Server;
@@ -30,8 +30,8 @@ pub enum Parcel {
 
 /// I/O processor event queue
 pub struct Queue {
-	worker: deque::Worker<Parcel>,
-	stealer: deque::Stealer<Parcel>,
+	worker: chase_lev::Worker<Parcel>,
+	stealer: chase_lev::Stealer<Parcel>,
 	ready: ReadyFlag,
 	worker_count: Arc<AtomicUsize>,
 	worker_next_id: Arc<AtomicUsize>,
@@ -42,7 +42,7 @@ pub struct Queue {
 impl Queue {
 	/// Create a new event queue.
 	pub fn new(worker_count_max: usize) -> Queue {
-		let (worker, stealer) = deque::new();
+		let (worker, stealer) = chase_lev::deque();
 
 		Queue {
 			worker: worker,
@@ -55,7 +55,7 @@ impl Queue {
 	}
 
 	/// Get clone of the stealer
-	pub fn stealer(&self) -> deque::Stealer<Parcel> {
+	pub fn stealer(&self) -> chase_lev::Stealer<Parcel> {
 		self.stealer.clone()
 	}
 
@@ -83,11 +83,11 @@ impl Queue {
 
 	/// Push shutdown request in the queue. If `fast` is `true` then the queue
 	/// will be cleaned first.
-	pub fn shutdown(&self, fast: bool) {
+	pub fn shutdown(&mut self, fast: bool) {
 		// Clean the deque first because immediate shutdown is requested
 		if fast {
 			loop {
-				match self.worker.pop() {
+				match self.worker.try_pop() {
 					Some(_) => (),
 					None => break,
 				};
@@ -106,7 +106,7 @@ impl Queue {
 	}
 
 	/// Push event in the qeueue and notify worker that new parcel is available.
-	pub fn push(&self, parcel: Parcel) {
+	pub fn push(&mut self, parcel: Parcel) {
 		// Push the parcel in the deque and raise the ready flag
 		self.worker.push(parcel);
 		self.ready.raise(Notify::All);

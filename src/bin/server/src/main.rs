@@ -77,7 +77,7 @@ fn main() {
 		.unwrap();
 
 	// Print welcome message
-	info!("Wrustlr v{}", env!("CARGO_PKG_VERSION"));
+	info!("Wrustlr v{} ", env!("CARGO_PKG_VERSION"));
 	
 	// Parse configuration
 	let servers: Vec<ServerConf> = match Vec::from_conf(&server_config, "servers") {
