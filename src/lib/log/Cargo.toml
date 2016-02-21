@@ -1,0 +1,18 @@
+[package]
+description = "Wrust Log"
+name = "wrust_log"
+version = "0.1.0"
+authors = ["workanator <workanator@gmail.com>"]
+
+[lib]
+name = "wrust_core"
+crate-type = ["rlib"]
+test = true
+plugin = false
+
+[dependencies]
+wrust_types = { path = "../types", version = "*" }
+wrust_conf = { path = "../conf", version = "*" }
+log = "*"
+flexi_logger = "*"
+ansi_term = "*"
