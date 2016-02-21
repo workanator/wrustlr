@@ -1,10 +1,9 @@
 #[macro_use] extern crate log;
-extern crate env_logger;
 extern crate chan_signal;
-extern crate ansi_term;
 extern crate wrust_types;
 extern crate wrust_conf;
 extern crate wrust_module;
+extern crate wrust_log;
 extern crate wrust_core;
 extern crate wrust_mod_echo;
 
@@ -12,9 +11,6 @@ mod constants;
 
 use std::path::Path;
 use chan_signal::Signal;
-use log::{LogRecord, LogLevel};
-use env_logger::LogBuilder;
-use ansi_term::Colour::{Red, Green, Yellow, Purple, Cyan};
 use wrust_conf::{Conf, FromConf};
 use wrust_module::Facility;
 use wrust_core::net::core::{CoreConf, Core};
@@ -26,7 +22,7 @@ use constants::{CONFIG_DIRECTORY, SERVER_CONFIG_NAME};
 macro_rules! config_failed {
 	($msg:expr, $details:expr) => ({
 		error!($msg, $details);
-		panic!("Server configuration failed");
+		panic!($msg, $details);
 	});
 }
 
@@ -41,45 +37,19 @@ fn main() {
 	};
 
 	// Initialize logger
-	let core_settings = match CoreConf::from_conf(&server_config, "core") {
-		Ok(settings) => settings,
-		Err(msg) => config_failed!("Core settings parse failed with message '{}'", msg)
-	};
-
-	let mut logger = LogBuilder::new();
-
-	if core_settings.log.colorize {
-		logger.format(|record: &LogRecord| {
-			match record.level() {
-				LogLevel::Error => format!("{} {} in {} ({}:{})", Red.paint("ERROR"), record.args(), record.location().module_path(), record.location().file(), record.location().line()),
-				LogLevel::Warn => format!("{} {} in {} ({}:{})", Yellow.paint("WARN"), record.args(), record.location().module_path(), record.location().file(), record.location().line()),
-				LogLevel::Info => format!("{}: {}", Green.paint("INF"), record.args()),
-				LogLevel::Debug => format!("{}: {}", Purple.paint("DBG"), record.args()),
-				LogLevel::Trace => format!("{}: {}", Cyan.paint("TRC"), record.args()),
-			}
-		});
+	if let Err(msg) = wrust_log::init_from_conf(&server_config, "log") {
+		config_failed!("Server configuration load failed with message '{:?}'", msg)
 	}
-	else {
-		logger.format(|record: &LogRecord| {
-			match record.level() {
-				LogLevel::Error => format!("ERROR {} in {} ({}:{})", record.args(), record.location().module_path(), record.location().file(), record.location().line()),
-				LogLevel::Warn => format!("WARN {} in {} ({}:{})", record.args(), record.location().module_path(), record.location().file(), record.location().line()),
-				LogLevel::Info => format!("INF: {}", record.args()),
-				LogLevel::Debug => format!("DBG: {}", record.args()),
-				LogLevel::Trace => format!("TRC: {}", record.args()),
-			}
-		});
-	}
-
-	logger
-		.parse(&core_settings.log.level)
-		.init()
-		.unwrap();
 
 	// Print welcome message
 	info!("Wrustlr v{} ", env!("CARGO_PKG_VERSION"));
 	
 	// Parse configuration
+	let core_settings = match CoreConf::from_conf(&server_config, "core") {
+		Ok(settings) => settings,
+		Err(msg) => config_failed!("Core settings parse failed with message '{}'", msg)
+	};
+
 	let servers: Vec<ServerConf> = match Vec::from_conf(&server_config, "servers") {
 		Ok(collection) => collection,
 		Err(msg) => config_failed!("Servers parse failed with message '{}'", msg)

@@ -5,7 +5,7 @@ version = "0.1.0"
 authors = ["workanator <workanator@gmail.com>"]
 
 [lib]
-name = "wrust_core"
+name = "wrust_log"
 crate-type = ["rlib"]
 test = true
 plugin = false

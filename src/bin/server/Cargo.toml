@@ -8,9 +8,8 @@ authors = ["workanator <workanator@gmail.com>"]
 wrust_types = { path = "../../lib/types", version = "*" }
 wrust_conf = { path = "../../lib/conf", version = "*" }
 wrust_module = { path = "../../lib/module", version = "*" }
+wrust_log = { path = "../../lib/log", version = "*" }
 wrust_core = { path = "../../lib/core", version = "*" }
 wrust_mod_echo = { path = "../../mod/echo", version = "*" }
 log = "*"
-env_logger = "*"
 chan-signal = "*"
-ansi_term = "*"
