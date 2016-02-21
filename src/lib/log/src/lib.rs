@@ -41,7 +41,7 @@ pub fn init(config: LogConf) -> Result<()> {
 	};
 
 	// Initialize logger
-	match flexi_logger::init(flexi_config, None) {
+	match flexi_logger::init(flexi_config, Some(config.level.to_string())) {
 		Ok(_) => Ok(()),
 		Err(_) => Error::new("Logger initialization failed").result()
 	}
